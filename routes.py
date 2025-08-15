@@ -6,29 +6,20 @@ from services.gemini_service import analyze_resume_with_gemini, improve_resume_s
 from utils.pdf_extractor import extract_text_from_pdf
 from utils.response_parser import parse_gemini_response
 from utils.errors import BadRequestError, ServerError
-from utils.cors_helper import cors_preflight_response, add_cors_headers
+from utils.cors_helper import get_cors_origins
 
 # Create a Blueprint for API routes
 api = Blueprint('api', __name__)
-
-# Global CORS preflight response handler for all routes
-@api.before_request
-def handle_preflight():
-    if request.method == "OPTIONS":
-        return cors_preflight_response()
-
-# Add CORS headers to all responses
-@api.after_request
-def after_request(response):
-    return add_cors_headers(response)
     
 # Debug endpoint for CORS verification
 @api.route('/debug/cors', methods=['GET'])
 def debug_cors():
     """Debug endpoint to check CORS settings"""
-    cors_origins = os.getenv('CORS_ORIGINS', 'http://localhost:5173,https://resumeanalyzer-alpha.vercel.app').split(',')
+    cors_origins = get_cors_origins()
     request_origin = request.headers.get('Origin', 'No origin header')
-    return jsonify({
+    
+    # Check response headers (these will be added by Flask-CORS)
+    response = make_response(jsonify({
         "status": "success",
         "message": "CORS debug information",
         "origin_header": request_origin,
@@ -38,7 +29,10 @@ def debug_cors():
         "environment": {
             "CORS_ORIGINS": os.getenv('CORS_ORIGINS', 'Not set')
         }
-    })
+    }))
+    
+    # Don't manually add CORS headers here; let Flask-CORS handle it
+    return response
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)

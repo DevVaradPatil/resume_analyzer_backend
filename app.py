@@ -3,7 +3,7 @@ from flask_cors import CORS
 import os
 from routes import api
 from utils.errors import ApiError
-from utils.cors_helper import get_cors_origins, add_cors_headers
+from utils.cors_helper import get_cors_origins
 
 def create_app():
     """
@@ -28,11 +28,6 @@ def create_app():
          allow_headers=["Content-Type", "Authorization", "X-Requested-With"],
          supports_credentials=True,
          max_age=86400)  # Cache preflight requests for 24 hours
-         
-    # Global CORS headers for all responses
-    @app.after_request
-    def after_request(response):
-        return add_cors_headers(response)
     
     # Register blueprints
     app.register_blueprint(api)
