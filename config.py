@@ -31,7 +31,14 @@ class TestingConfig(Config):
 class ProductionConfig(Config):
     """Production configuration"""
     # Production specific configs
-    pass
+    DEBUG = False
+    TESTING = False
+    
+    # Security settings
+    SESSION_COOKIE_SECURE = True
+    SESSION_COOKIE_HTTPONLY = True
+    REMEMBER_COOKIE_SECURE = True
+    REMEMBER_COOKIE_HTTPONLY = True
 
 # Dictionary with different configuration environments
 config_by_name = {

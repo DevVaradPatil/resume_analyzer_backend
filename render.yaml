@@ -1,0 +1,26 @@
+services:
+  # Backend service
+  - type: web
+    name: resume-analyzer-backend
+    env: python
+    region: ohio  # Choose your preferred region
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn wsgi:application
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: FLASK_DEBUG
+        value: 0
+      - key: PYTHON_VERSION
+        value: 3.11.0  # Specify your Python version
+      - key: GOOGLE_API_KEY
+        sync: false  # This means you'll set it in the Render dashboard
+      - key: SECRET_KEY
+        generateValue: true  # Automatically generates a random value
+      - key: CORS_ORIGINS
+        sync: false  # Set this in the Render dashboard for your frontend URL
+    autoDeploy: true  # Optional: deploy automatically on pushes to your repo
+    disk:
+      name: uploads
+      mountPath: /app/uploads
+      sizeGB: 1  # Size in GB, adjust as needed

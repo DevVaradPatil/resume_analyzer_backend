@@ -1,5 +1,6 @@
 from flask import Flask, jsonify
 from flask_cors import CORS
+import os
 from routes import api
 from utils.errors import ApiError
 
@@ -13,8 +14,9 @@ def create_app():
     # Initialize Flask app
     app = Flask(__name__)
     
-    # Enable CORS for all routes
-    CORS(app)
+    # Enable CORS with appropriate configuration
+    cors_origins = os.getenv('CORS_ORIGINS', 'http://localhost:5173').split(',')
+    CORS(app, resources={r"/*": {"origins": cors_origins, "supports_credentials": True}})
     
     # Register blueprints
     app.register_blueprint(api)

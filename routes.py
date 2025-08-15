@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
 import logging
+import os
 
 from services.gemini_service import analyze_resume_with_gemini, improve_resume_section_with_gemini, analyze_resume_overall_with_gemini
 from utils.pdf_extractor import extract_text_from_pdf
@@ -238,8 +239,28 @@ def test_format():
 
 @api.route('/health', methods=['GET'])
 def health_check():
-    """Simple health check endpoint"""
-    return jsonify({"status": "ok", "message": "Service is running"})
+    """
+    Health check endpoint for monitoring and Render's health checks
+    Checks API key validity and uploads directory access
+    """
+    health_status = {
+        "status": "ok",
+        "message": "Service is running",
+        "version": "1.0.0",
+        "environment": os.getenv("FLASK_ENV", "development"),
+        "checks": {
+            "api_key": "ok" if os.getenv("GOOGLE_API_KEY") else "missing",
+            "uploads_directory": "ok"
+        }
+    }
+    
+    # Check if uploads directory is accessible
+    uploads_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'uploads')
+    if not os.path.exists(uploads_dir) or not os.access(uploads_dir, os.W_OK):
+        health_status["checks"]["uploads_directory"] = "error"
+        health_status["status"] = "warning"
+    
+    return jsonify(health_status)
 
 @api.route('/improve-section', methods=['POST'])
 def improve_section():
