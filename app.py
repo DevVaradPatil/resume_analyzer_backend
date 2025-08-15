@@ -15,8 +15,17 @@ def create_app():
     app = Flask(__name__)
     
     # Enable CORS with appropriate configuration
-    cors_origins = os.getenv('CORS_ORIGINS', 'http://localhost:5173').split(',')
-    CORS(app, resources={r"/*": {"origins": cors_origins, "supports_credentials": True}})
+    cors_origins = os.getenv('CORS_ORIGINS', 'http://localhost:5173,https://resumeanalyzer-alpha.vercel.app').split(',')
+    
+    # CORS configuration with proper preflight request handling
+    CORS(app, 
+         resources={r"/*": {
+             "origins": cors_origins, 
+             "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+             "allow_headers": ["Content-Type", "Authorization", "X-Requested-With"],
+             "supports_credentials": True,
+             "max_age": 86400  # Cache preflight requests for 24 hours
+         }})
     
     # Register blueprints
     app.register_blueprint(api)

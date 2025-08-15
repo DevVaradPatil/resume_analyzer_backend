@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, make_response
 import logging
 import os
 
@@ -9,6 +9,16 @@ from utils.errors import BadRequestError, ServerError
 
 # Create a Blueprint for API routes
 api = Blueprint('api', __name__)
+
+# Global CORS preflight response handler for all routes
+@api.before_request
+def handle_preflight():
+    if request.method == "OPTIONS":
+        response = make_response()
+        response.headers.add("Access-Control-Allow-Origin", "*")
+        response.headers.add("Access-Control-Allow-Headers", "Content-Type,Authorization,X-Requested-With")
+        response.headers.add("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS")
+        return response
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
