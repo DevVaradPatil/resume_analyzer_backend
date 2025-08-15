@@ -3,6 +3,7 @@ from flask_cors import CORS
 import os
 from routes import api
 from utils.errors import ApiError
+from utils.cors_helper import get_cors_origins, add_cors_headers
 
 def create_app():
     """
@@ -15,17 +16,23 @@ def create_app():
     app = Flask(__name__)
     
     # Enable CORS with appropriate configuration
-    cors_origins = os.getenv('CORS_ORIGINS', 'http://localhost:5173,https://resumeanalyzer-alpha.vercel.app').split(',')
+    cors_origins = get_cors_origins()
+    
+    # Print the allowed origins for debugging
+    print(f"CORS enabled for origins: {cors_origins}")
     
     # CORS configuration with proper preflight request handling
     CORS(app, 
-         resources={r"/*": {
-             "origins": cors_origins, 
-             "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-             "allow_headers": ["Content-Type", "Authorization", "X-Requested-With"],
-             "supports_credentials": True,
-             "max_age": 86400  # Cache preflight requests for 24 hours
-         }})
+         origins=cors_origins,
+         methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+         allow_headers=["Content-Type", "Authorization", "X-Requested-With"],
+         supports_credentials=True,
+         max_age=86400)  # Cache preflight requests for 24 hours
+         
+    # Global CORS headers for all responses
+    @app.after_request
+    def after_request(response):
+        return add_cors_headers(response)
     
     # Register blueprints
     app.register_blueprint(api)

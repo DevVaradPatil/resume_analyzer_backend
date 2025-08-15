@@ -6,6 +6,7 @@ from services.gemini_service import analyze_resume_with_gemini, improve_resume_s
 from utils.pdf_extractor import extract_text_from_pdf
 from utils.response_parser import parse_gemini_response
 from utils.errors import BadRequestError, ServerError
+from utils.cors_helper import cors_preflight_response, add_cors_headers
 
 # Create a Blueprint for API routes
 api = Blueprint('api', __name__)
@@ -14,11 +15,30 @@ api = Blueprint('api', __name__)
 @api.before_request
 def handle_preflight():
     if request.method == "OPTIONS":
-        response = make_response()
-        response.headers.add("Access-Control-Allow-Origin", "*")
-        response.headers.add("Access-Control-Allow-Headers", "Content-Type,Authorization,X-Requested-With")
-        response.headers.add("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS")
-        return response
+        return cors_preflight_response()
+
+# Add CORS headers to all responses
+@api.after_request
+def after_request(response):
+    return add_cors_headers(response)
+    
+# Debug endpoint for CORS verification
+@api.route('/debug/cors', methods=['GET'])
+def debug_cors():
+    """Debug endpoint to check CORS settings"""
+    cors_origins = os.getenv('CORS_ORIGINS', 'http://localhost:5173,https://resumeanalyzer-alpha.vercel.app').split(',')
+    request_origin = request.headers.get('Origin', 'No origin header')
+    return jsonify({
+        "status": "success",
+        "message": "CORS debug information",
+        "origin_header": request_origin,
+        "allowed_origins": cors_origins,
+        "is_allowed": request_origin in cors_origins,
+        "request_headers": dict(request.headers),
+        "environment": {
+            "CORS_ORIGINS": os.getenv('CORS_ORIGINS', 'Not set')
+        }
+    })
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
